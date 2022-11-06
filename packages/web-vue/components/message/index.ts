@@ -55,7 +55,9 @@ class MessageManger {
     this.messages.value.push(message);
     this.messageIds.add(id);
     return {
-      close: () => this.remove(id),
+      close: () => {
+        return this.remove(id);
+      },
     };
   };
 
@@ -113,11 +115,14 @@ const message = types.reduce((pre, value) => {
     if (isString(config)) {
       config = { content: config };
     }
+    // Message.info => 最终在此调用
     const _config: _MessageConfig = { type: value, ...config };
     const { position = 'top' } = _config;
     if (!messageInstance[position]) {
+      // 直接new，根据config渲染messageList，即渲染message
       messageInstance[position] = new MessageManger(_config, appContext);
     }
+    // 调 add 缓存 message 实例
     return messageInstance[position]!.add(_config);
   };
   return pre;
@@ -139,8 +144,9 @@ const Message = {
     } as MessageMethod;
 
     for (const key of types) {
-      _message[key] = (config, appContext = app._context) =>
-        message[key](config, appContext);
+      _message[key] = (config, appContext = app._context) => {
+        return message[key](config, appContext);
+      };
     }
 
     app.config.globalProperties.$message = _message;
